@@ -1,0 +1,44 @@
+{
+  "parser": "babel-eslint",
+  "extends": "airbnb",
+  "plugins": [
+    "react"
+  ],
+  "rules": {
+    // prefer double quotes
+    "quotes": [2, "double", "avoid-escape"],
+
+    // don't worry about dangling comma
+    "comma-dangle": 0,
+
+    //
+    // necessary to fix bare JSX files
+    //
+
+    // dont' be pedantic about semicolons
+    "semi": 0,
+
+    // ok to use undefined variables (THIS ONE REALLY HURTS)
+    "no-undef": 0,
+
+    // ignore unused expressions
+    "no-unused-expressions": 0,
+
+    // ignore unused vars
+    "no-unused-vars": 0,
+
+    // don't worry about requiring React
+    "react/react-in-jsx-scope": 0,
+
+    // don't worry about undefined <Component> names
+    "react/jsx-no-undef": 0,
+
+    // don't worry about how we indent props (REVIEW THIS)
+    "react/jsx-indent-props": 0
+
+  },
+  "env": {
+    "browser": true,
+    "node": true
+  }
+}
