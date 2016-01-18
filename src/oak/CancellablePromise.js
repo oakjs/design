@@ -29,12 +29,13 @@ export default class CancellablePromise extends Promise {
   static CANCELLED = "CANCELLED";
 
   // Class constructor for a `Cancellation`.
-  static Cancellation = class Cancellation extends Error{};
+  static Cancellation = class Cancellation extends Error {};
 
   constructor(promiseFn) {
     // Call the superclass constructor, remembering its resolve/reject methods.
-    const superResolve, superReject;
-    super( (resolve, reject) => {
+    let superResolve;
+    let superReject;
+    super((resolve, reject) => {
       superResolve = resolve;
       superReject = reject;
     });
@@ -45,7 +46,7 @@ export default class CancellablePromise extends Promise {
       if (this.isSettled) return false;
 
       // Add frozen `state` property for debugging and introspection.
-      Object.defineProperty(this, "state", {value:state});
+      Object.defineProperty(this, "state", { value: state });
       return true;
     }
 
@@ -69,7 +70,7 @@ export default class CancellablePromise extends Promise {
     }
 
     // `promise.onCancel(<handler>)` to add an onCancel handler.
-    const cancelHandlers;
+    let cancelHandlers;
     const onCancel = (handler) => {
       if (this.isSettled) {
         this.catch(handler);
@@ -88,7 +89,7 @@ export default class CancellablePromise extends Promise {
     }
 
     // add `cancel()` and `onCancel()` methods to the promise
-    Object.defineProperties(this, { {value:cancel}, {value:onCancel} });
+    Object.defineProperties(this, { cancel:{value:cancel}, onCancel:{value:onCancel} });
   }
 
   // Wrap `then` and `catch` to return a `CancelablePromise`.
@@ -113,7 +114,8 @@ export default class CancellablePromise extends Promise {
   }
 
   get wasRejected() {
-    return (this.state === CancellablePromise.REJECTED || this.state === CancellablePromise.CANCELLED);
+    return (this.state === CancellablePromise.REJECTED
+      || this.state === CancellablePromise.CANCELLED);
   }
 
   get wasCancelled() {
@@ -124,22 +126,22 @@ export default class CancellablePromise extends Promise {
   // Wrap static Promise methods to return a CancellablePromise
   // API: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
   static resolve(value) {
-    return new CancellablePromise( (resolve) => resolve(value) );
+    return new CancellablePromise((resolve) => resolve(value));
   }
 
   static reject(reason) {
-    return new CancellablePromise( (resolve, reject) => reject(reason) );
+    return new CancellablePromise((resolve, reject) => reject(reason));
   }
 
   static all(iterable) {
-    return new CancellablePromise( (resolve, reject) => {
+    return new CancellablePromise((resolve, reject) => {
       Promise.all(iterable)
              .then(resolve, reject);
     })
   }
 
   static race(iterable) {
-    return new CancellablePromise( (resolve, reject) => {
+    return new CancellablePromise((resolve, reject) => {
       Promise.race(iterable)
              .then(resolve, reject);
     })

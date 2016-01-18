@@ -29,7 +29,7 @@ export class LoadableComponent extends React.Component {
 
     // Constructor for component to be returned if the component at `_path` was not found.
     _notFoundConstructor: Stub,
-  }
+  };
 
   static contextTypes = {
     project: React.PropTypes.object,
