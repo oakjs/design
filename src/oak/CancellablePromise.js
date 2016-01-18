@@ -3,7 +3,15 @@
 //
 //	Cancellable promise
 //
-//  Returns a Promise with a `cancel()` method, which rejects with a special `Cancellation` error.
+//  Returns a Promise with a `cancel()` method, which a caller can use to "cancel" the promise.
+//  "Cancelling" a promise will reject it, indicating that you no longer care about the result.
+//
+//    const promise = new CancellablePromise(resolve, reject, cancel) {...}
+//    promise.onCancel( console.warn );
+//    promise.cancel("User pressed the cancel button")
+//    // => "User pressed the cancel button."
+//
+//
 //  You can also check the state of the promise:
 //
 //    const p = new CancellablePromise(...);
@@ -48,8 +56,17 @@ export default class CancellablePromise extends Promise {
     }
 
     const reject = (reason) => {
-      if (setState(CancellablePromise.REJECTED)
+      if (setState(CancellablePromise.REJECTED))
         superReject(reason);
+    }
+
+    const cancel = (reason) => {
+      if (setState(CancellablePromise.CANCELLED)) {
+        // call any defined cancel handlers first
+        if (cancelHandlers) cancelHandlers.forEach( (handler) => handler(reason) );
+        superReject(reason);
+      }
+    }
 
     // `promise.onCancel(<handler>)` to add an onCancel handler.
     const cancelHandlers;
@@ -62,19 +79,6 @@ export default class CancellablePromise extends Promise {
       }
     }
 
-    // `promise.cancel(<reason>)` to cancel the promise if it hasn't already settled.
-    const cancel = (reason) => {
-      if (this.isSettled) return;
-
-      // call any defined cancel handlers first if necessary
-      if (cancelHandlers) cancelHandlers.forEach( (handler) => handler(value) );
-
-      reject(reason);
-    }
-
-    // add `cancel()` and `onCancel()` methods to the promise
-    Object.defineProperties(this, { {value:cancel}, {value:onCancel} });
-
     // execute the promise function
     try {
       promiseFn( resolve, reject, cancel );
@@ -82,7 +86,22 @@ export default class CancellablePromise extends Promise {
     catch (error) {
       reject(error);
     }
+
+    // add `cancel()` and `onCancel()` methods to the promise
+    Object.defineProperties(this, { {value:cancel}, {value:onCancel} });
   }
+
+  // Wrap `then` and `catch` to return a `CancelablePromise`.
+  then(onSuccess, onFailure) {
+
+  }
+
+  catch(onFailure) {
+
+  }
+
+  // Add a `always` method which runs
+
 
   // Syntactic sugar so you can tell if a promise is in any of the given states.
   get isSettled() {

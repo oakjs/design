@@ -1,9 +1,21 @@
-// Component loader/wrapper thinger.
+"use strict";
+//////////////////////////////
+//
+// <LoadableComponent/>
+//
+// Component wrapper which loads a theme/project/stack/card component for you automatically.
+//
+// Uses `API.loadComponent(<contextIds>)` to dynamically load a component,
+//  optionally rendering a loader component if the component hasn't already been loaded.
+//
 // DOWNSIDE:
 //    - using this will create a wrapper element in the DOM output
 //      even once the component has loaded.
 //      That could mess up the html structure of, eg, a form etc.
-export class Component extends React.Component {
+//
+//////////////////////////////
+import Stub from "Stub.jsx";
+export class LoadableComponent extends React.Component {
 
   static defaultProps = {
     // Path to load component:
@@ -16,7 +28,14 @@ export class Component extends React.Component {
     _loadingConstructor: undefined,
 
     // Constructor for component to be returned if the component at `_path` was not found.
-    _notFoundConstructor: EmptyStub,
+    _notFoundConstructor: Stub,
+  }
+
+  static contextTypes = {
+    project: React.PropTypes.object,
+    stack: React.PropTypes.object,
+    template: React.PropTypes.object,
+    card: React.PropTypes.object
   }
 
   render() {
@@ -40,12 +59,10 @@ export class Component extends React.Component {
 
   // Return the a context id map for the curent context.
   getContextIds() {
-    const { context } = this;
-
-    if (!context) return undefined;
+    if (!this.context) return undefined;
 
     const ids = {};
-    const { project, stack, template, card } = context;
+    const { project, stack, template, card } = this.context;
     if (project)  ids.project  = project.props.id;
     if (stack)    ids.stack    = stack.props.id;
     if (template) ids.template = template.props.id;
