@@ -1,68 +1,152 @@
 #Component scoping
 
-	
-###Plan for Manually Scoping
+##Design goals:
 
-At each theme/project/stack/card level, we generate `components/index.js` file.  
+- Each level of the heirarchy (theme/project/stack/card) can specify components which override parent components of the same name (eg: to have a specialized Button class for a card).
+- The IDE shouldn't have to worry about component scoping when manipulating `.jsxs` files.
+- Developers editing `card.jsxs` files manually should not have to worry about component scoping.
+- Card authors creating custom components should be able to pull in the nested component heirarchy and work with it easily (eg: they don't have to worry about where components come from either).
+- Ideally we'd be able to use babel/eslint/etc to catch missing component errors.
 
+---
 
+## Component Index:
+Ordered list of components derived from files/folders in the components folder.  
 
-######projects/PROJECT/stacks/STACK/cards/CARD/components/.index.json
-Ordered list of components derived from files/folders in the components folder:
+- Maintained automatically by watching the components folder.  
+- New, unknown components are added to the end of the list.  
+- MAY BE edited by hand to change the include order.
 		
-	{
-		"components": [
-			{ "path": "ComponentA", "modified": "<date>" },
-			{ "path": "ComponentB", "modified": "<date>" },
-		]
-	}
+######projects/PROJECT/stacks/STACK/cards/CARD/components/index.json
+	[
+		{ "path": "ComponentA", "modified": "<date>" },
+		{ "path": "ComponentB", "modified": "<date>" },
+	]
+
+
+## Component include file
+
+JS file which bundles card components with project + template components into a single namespace.
+
+- Generated from the `index.json` file whenever that file changes.
+- MUST NOT be edited by hand.
+- **TODO:** How to we get a pointer to the template's component index file?
+	- Could have a symbolic link to the template's folder within the card folder?
 
 ###### projects/PROJECT/stacks/STACK/cards/CARD/components/.index.js:
-We then generate the following from the above:
-	
-	// Get named components defined at the stack level.
-	import { default as superComponents } from "../../../components/";
 
-	// Copy supers into local `components` map
-	const components = Object.assign({}, superComponents);
+	const components = {};
 	
-	// Add components from the card's component directory explicitly:
+	// Get named components defined at the stack level and copy into components map.
+	import { default as stackComponents } from "../../../components/.index.js";
+	Object.assign(components, superComponents);
+	
+	// Get named components defined at the template level.
+	import { default as templateComponents } from "TODO: TEMPLATE PATH???"
+	Object.assign(components, templateComponents);
+
+	// Add card's components directory to exports:
 	import { default as ComponentA } from "./ComponentA";
 	import { default as ComponentB } from "./ComponentB";
 
 	// add the card-specific ones to `components`, overriding the supers
 	Object.assign(components, exports);
 	
-	// export components map as default
+	// export components map
 	export default components;
-		
 
-###### projects/PROJECT/stacks/STACK/cards/CARD/.card.jsx
-In the `card.jsx` file, we'll bring this composited components file into scope as `$$` or something and then prefix all jsx components with it:
+## Sample card.jsxs file
+The `card.jsxs` file the developer or IDE is actually creating/manipulating.
 
-	import oak from "oak";
-	import $$ from "../components/.index.js"
-	
-	export default class Card extends oak.Card {
-		render() {
-			const { card, template, stack, project, data } = this.props;
-			const { state } = this;
-			return (
-				<$$.ComponentA ...>
-					<$$.ComponentB/>
-					<$$.ParentComponent/>
-					<div/>
-				</$$.ComponentA>
-			);
-		}
-	}
-	
+- Generally created via the IDE.
+- MAY BE edited by hand.
 
 ###### projects/PROJECT/stacks/STACK/cards/CARD/card.jsxs:
-The `card.jsxs` file we're actually creating/manipulating is just the contents of the `return (...)` bits inside the `render()` function, **without** the `$$.` bits:
 
 	<ComponentA ...>
 		<ComponentB/>
 		<ParentComponent/>
 		<div/>
 	</ComponentA>
+
+
+## Sample card.js file
+Extra logic included in the card at runtime.
+
+- A single object of methods / getters / setters / etc.
+- Generally created via the IDE.
+- MAY BE edited by hand.
+- *TODO:* This file should be directly lintable, which means we'll need some sort of wrapper around it...
+
+###### projects/PROJECT/stacks/STACK/cards/CARD/card.js:
+
+	static const FOOBAR = "FOOBAR";
+
+	someMethod() {
+		super.someMethod();
+		...
+	}
+		
+	get foo() {...}
+		
+	
+
+
+
+## Compiled Card Output file
+JSX file which wraps the `.jsxs` file and creates a fully-legal .jsx file.
+
+- Generated automatically whenever `card.jsxs` file changes.
+- MUST NOT be edited by hand.
+- NOTE: we may want to bring in, eg @memoize, etc here for developers
+
+###### projects/PROJECT/stacks/STACK/cards/CARD/.card.jsx
+
+	import React as "react";
+	import oak from "oak";
+	import $$ from "../components"
+	
+	export default class Card extends oak.Card {
+		/**--------------------------------------**/
+		/** stuff from card.js                   **/
+		/**--------------------------------------**/
+		
+		static const FOOBAR = "FOOBAR";
+
+		someVar = foo;
+		
+		someMethod() {
+			super.someMethod();
+			...
+		}
+		
+		get foo() {...}
+		
+		/**--------------------------------------**/
+		/** end stuff from card.js               **/
+		/**--------------------------------------**/
+		
+		render() {
+			const { card, template, stack, project, data } = this.props;
+			const { state } = this;
+			return (
+				/**--------------------------------------**/
+				/** stuff from card.jsx with `$$.` added **/
+				/**--------------------------------------**/
+				
+				<$$.ComponentA ...>
+					<$$.ComponentB/>
+					<$$.TemplateComponent/>
+					<$$.ParentComponent/>
+					<div/>
+				</$$.ComponentA>
+				
+				/**--------------------------------------**/
+				/** end stuff from card.jsx              **/
+				/**--------------------------------------**/
+			);
+		}
+	}
+	
+
+	
