@@ -76,7 +76,7 @@ Extra logic included in the card at runtime.
 - A single object of methods / getters / setters / etc.
 - Generally created via the IDE.
 - MAY BE edited by hand.
-- *TODO:* This file should be directly lintable, which means we'll need some sort of wrapper around it...
+- *TODO:* Ideally a developer can directly lint this file, but that won't work without a class wrapper around the methods, includes, etc... ???
 
 ###### projects/PROJECT/stacks/STACK/cards/CARD/card.js:
 
