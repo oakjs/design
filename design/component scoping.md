@@ -16,7 +16,7 @@ Ordered list of components derived from files/folders in the components folder.
 - Maintained automatically by watching the components folder.  
 - New, unknown components are added to the end of the list.  
 - MAY BE edited by hand to change the include order.
-		
+
 ######projects/PROJECT/stacks/STACK/cards/CARD/components/index.json
 	[
 		{ "path": "ComponentA", "modified": "<date>" },
@@ -104,7 +104,7 @@ JSX file which wraps the `.jsxs` file and creates a fully-legal .jsx file.
 
 	import React as "react";
 	import oak from "oak";
-	import $$ from "../components"
+	import $$ from "../components";
 	
 	export default class Card extends oak.Card {
 		/**--------------------------------------**/
@@ -147,6 +147,3 @@ JSX file which wraps the `.jsxs` file and creates a fully-legal .jsx file.
 			);
 		}
 	}
-	
-
-	
